@@ -19,7 +19,7 @@ import { NextRequest, NextResponse } from 'next/server'
 //   return NextResponse.next()
 // }
 
-export async function middleware(_request: NextRequest) {
+export async function proxy(_request: NextRequest) {
   return NextResponse.next()
 }
 
