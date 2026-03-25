@@ -78,7 +78,7 @@ function BreakdownContent({ b, type }: { b: ScoredBeneficiary; type: 'short' | '
   const weights   = type === 'short' ? SHORT_WEIGHTS : LONG_WEIGHTS
   const typeLabel = type === 'short' ? '단기 투자형' : '장기 투자형'
   const accentCls = type === 'short' ? 'text-orange-500' : 'text-blue-500'
-  const breakdown = b.score_breakdown as Record<string, number>
+  const breakdown = b.score_breakdown as unknown as Record<string, number>
   const keys      = Object.keys(weights)
 
   return (
