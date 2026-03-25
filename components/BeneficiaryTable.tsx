@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ScoredBeneficiary } from '@/lib/gemini'
 import { SHORT_WEIGHTS, LONG_WEIGHTS, SCORE_LABELS } from '@/lib/gemini'
 
@@ -130,7 +130,19 @@ function BreakdownContent({ b, type }: { b: ScoredBeneficiary; type: 'short' | '
 
 export default function BeneficiaryTable({ beneficiaries }: { beneficiaries: ScoredBeneficiary[] }) {
   const [hovered, setHovered] = useState<HoverState>(null)
+  const [haltedCodes, setHaltedCodes] = useState<Set<string>>(new Set())
   const sorted = [...beneficiaries].sort((a, b) => b.short_score - a.short_score)
+
+  useEffect(() => {
+    if (beneficiaries.length === 0) return
+    const codes = beneficiaries.map((b) => b.code).join(',')
+    fetch(`/api/check-halt?codes=${codes}`)
+      .then((res) => res.json())
+      .then((data: Record<string, boolean>) => {
+        setHaltedCodes(new Set(Object.entries(data).filter(([, v]) => v).map(([k]) => k)))
+      })
+      .catch(() => {})
+  }, [beneficiaries])
 
   return (
     // overflow-visible: 말풍선 툴팁이 잘리지 않도록
@@ -175,7 +187,14 @@ export default function BeneficiaryTable({ beneficiaries }: { beneficiaries: Sco
                 >
                   {/* 종목명 */}
                   <td className={`px-4 py-3 whitespace-nowrap ${isLast && !hasBreakdown ? 'rounded-bl-xl' : ''}`}>
-                    <p className="font-semibold text-zinc-900">{b.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-semibold text-zinc-900">{b.name}</p>
+                      {haltedCodes.has(b.code) && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 border border-red-200 leading-none">
+                          거래정지
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-zinc-400">{b.code}</p>
                   </td>
 
